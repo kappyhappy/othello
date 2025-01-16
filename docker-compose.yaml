@@ -1,0 +1,12 @@
+# version: '3'
+services:
+  mysql:
+    image: mysql:8.0.29
+    platform: linux/x86_64
+    ports:
+      - '3306:3006'
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpasswd
+      MYSQL_DATABASE: othello
+      MYSQL_USER: othello
+      MYSQL_PASSWORD: passwd
