@@ -1,4 +1,4 @@
-import mysql from "mysql2/promise";
+import mysql from 'mysql2/promise';
 
 export class MoveGateway {
     async insert (
