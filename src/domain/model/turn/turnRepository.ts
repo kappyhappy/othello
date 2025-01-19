@@ -1,12 +1,13 @@
 import mysql from 'mysql2/promise'
 import { Turn } from './turn';
-import { TurnGateway } from '../../infrastructure/turnGateway';
-import { SquareGateway } from '../../infrastructure/squareGateway';
-import { MoveGateway } from '../../infrastructure/moveGateway';
 import { Move } from './move';
 import { toDisc } from './disc';
 import { Point } from './point';
 import { Board } from './board';
+import { TurnGateway } from '../../../infrastructure/turnGateway';
+import { SquareGateway } from '../../../infrastructure/squareGateway';
+import { MoveGateway } from '../../../infrastructure/moveGateway';
+
 
 const turnGateway = new TurnGateway()
 const moveGateway = new MoveGateway()
