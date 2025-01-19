@@ -1,18 +1,12 @@
 import { connectMySQL } from "../dataaccess/connection"
 import { GameGateway } from "../dataaccess/gameGateway"
-import { TurnGateway } from "../dataaccess/turnGateway"
-import { MoveGateway } from "../dataaccess/moveGateway"
-import { SquareGateway } from "../dataaccess/squareGateway"
-import { DARK, LIGHT } from "./constants"
-import { Turn } from "../presentation/domain/turn"
-import { Board } from "../presentation/domain/board"
-import { toDisc } from "../presentation/domain/disc"
-import { Point } from "../presentation/domain/point"
+import { toDisc } from "../domain/disc"
+import { Point } from "../domain/point"
+import { TurnRepository } from "../domain/turnRepository"
 
 const gameGateway = new GameGateway()
-const turnGateway = new TurnGateway()
-const moveGateway = new MoveGateway()
-const squareGateway = new SquareGateway()
+
+const turnRepository = new TurnRepository()
 
 class findLatestGameTurnByTurnCountOutput {
     constructor (
@@ -37,7 +31,6 @@ class findLatestGameTurnByTurnCountOutput {
     get winnerDisc() {
         return this._winnerDisc
     }
-
 }
 
 export class TurnService {
@@ -51,25 +44,17 @@ export class TurnService {
             if (!gameRecord){
                 throw new Error('Latest game not found')
             }
-    
-            const turnRecord = await turnGateway.findForGameIdAndTurnCount(
-                conn, gameRecord.id, turnCount
+            
+            const turn = await turnRepository.findForGameIdAndTurnCount(
+                conn,
+                gameRecord.id,
+                turnCount
             )
-            if (!turnRecord){
-                throw new Error('Specified turn not found')
-            }
-    
-            const board = Array.from(Array(8)).map(() => Array.from(Array(8)))
-    
-            const squareRecords = await squareGateway.findForTurnId(conn, turnRecord.id)
-            squareRecords.forEach((s) => {
-                board[s.y][s.x] = s.disc
-            })
 
             return new findLatestGameTurnByTurnCountOutput(
                 turnCount,
-                board,
-                turnRecord.nextDisc,
+                turn.board.discs,
+                turn.nextDisc,
                 //Todo get from games_result table if game is over
                 undefined
             )
@@ -93,47 +78,16 @@ export class TurnService {
             }
 
             const previousTurnCount = turnCount - 1
-            const previousTurnRecord = await turnGateway.findForGameIdAndTurnCount(
-                conn, gameRecord.id, previousTurnCount
-            )
-            if (!previousTurnRecord){
-                throw new Error('Specified turn not found')
-            }
-
-            const squareRecords = await squareGateway.findForTurnId(conn, previousTurnRecord.id)
-
-            const board = Array.from(Array(8)).map(() => Array.from(Array(8)))
-            squareRecords.forEach((s) => {
-                board[s.y][s.x] = s.disc
-            })
-
-            const previousTurn = new Turn(
+            const previousTurn = await turnRepository.findForGameIdAndTurnCount(
+                conn,
                 gameRecord.id,
-                previousTurnCount,
-                toDisc(previousTurnRecord.nextDisc),
-                undefined,
-                new Board(board),
-                previousTurnRecord.endAt
+                previousTurnCount
             )
 
             const newTurn = previousTurn.placeNext(toDisc(disc), new Point(x, y))
 
-
-
             // store the turn
-            const turnRecord = await turnGateway.insert(
-                conn,
-                newTurn.gameId,
-                newTurn.turnCount,
-                newTurn.nextDisc,
-                newTurn.endAt
-            )
-            
-            await squareGateway.insertAll(
-                conn, turnRecord.id, newTurn.board.discs
-            )
-
-            await moveGateway.insert(conn, turnRecord.id, disc, x, y)
+            await turnRepository.save(conn, newTurn)
 
             await conn.commit()
         } finally {
