@@ -4,6 +4,10 @@ import { TurnGateway } from "../dataaccess/turnGateway"
 import { MoveGateway } from "../dataaccess/moveGateway"
 import { SquareGateway } from "../dataaccess/squareGateway"
 import { DARK, LIGHT } from "./constants"
+import { Turn } from "../presentation/domain/turn"
+import { Board } from "../presentation/domain/board"
+import { toDisc } from "../presentation/domain/disc"
+import { Point } from "../presentation/domain/point"
 
 const gameGateway = new GameGateway()
 const turnGateway = new TurnGateway()
@@ -103,23 +107,30 @@ export class TurnService {
                 board[s.y][s.x] = s.disc
             })
 
-            // check if disc can be placed
+            const previousTurn = new Turn(
+                gameRecord.id,
+                previousTurnCount,
+                toDisc(previousTurnRecord.nextDisc),
+                undefined,
+                new Board(board),
+                previousTurnRecord.endAt
+            )
 
-            // place disc
-            board[y][x] = disc
-            // console.log(board)
+            const newTurn = previousTurn.placeNext(toDisc(disc), new Point(x, y))
 
-            // turn over disc
+
 
             // store the turn
-            const nextDisc = disc === DARK ? LIGHT : DARK
-            const now = new Date()
             const turnRecord = await turnGateway.insert(
-                conn, gameRecord.id, turnCount, nextDisc, now 
+                conn,
+                newTurn.gameId,
+                newTurn.turnCount,
+                newTurn.nextDisc,
+                newTurn.endAt
             )
             
             await squareGateway.insertAll(
-                conn, turnRecord.id, board
+                conn, turnRecord.id, newTurn.board.discs
             )
 
             await moveGateway.insert(conn, turnRecord.id, disc, x, y)
