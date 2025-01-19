@@ -1,11 +1,10 @@
-import { connectMySQL } from "../dataaccess/connection"
-import { GameGateway } from "../dataaccess/gameGateway"
-import { toDisc } from "../domain/disc"
-import { Point } from "../domain/point"
-import { TurnRepository } from "../domain/turnRepository"
+import { connectMySQL } from "../infrastructure/connection"
+import { GameRepository } from "../domain/game/gameRepository"
+import { toDisc } from "../domain/turn/disc"
+import { Point } from "../domain/turn/point"
+import { TurnRepository } from "../domain/turn/turnRepository"
 
-const gameGateway = new GameGateway()
-
+const gameRepository = new GameRepository()
 const turnRepository = new TurnRepository()
 
 class findLatestGameTurnByTurnCountOutput {
@@ -40,14 +39,17 @@ export class TurnService {
         const conn = await connectMySQL()
     
         try {
-            const gameRecord = await gameGateway.findLatest(conn)
-            if (!gameRecord){
+            const game = await gameRepository.findLatest(conn)
+            if (!game){
                 throw new Error('Latest game not found')
+            }
+            if (!game.id){
+                throw new Error('game.id not exist')
             }
             
             const turn = await turnRepository.findForGameIdAndTurnCount(
                 conn,
-                gameRecord.id,
+                game.id,
                 turnCount
             )
 
@@ -72,15 +74,18 @@ export class TurnService {
         // get one turn before
         const conn = await connectMySQL()
         try {
-            const gameRecord = await gameGateway.findLatest(conn)
-            if (!gameRecord){
+            const game = await gameRepository.findLatest(conn)
+            if (!game){
                 throw new Error('Latest game not found')
+            }
+            if (!game.id){
+                throw new Error('game.id not exist')
             }
 
             const previousTurnCount = turnCount - 1
             const previousTurn = await turnRepository.findForGameIdAndTurnCount(
                 conn,
-                gameRecord.id,
+                game.id,
                 previousTurnCount
             )
 

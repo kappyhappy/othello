@@ -1,6 +1,5 @@
 import mysql from 'mysql2/promise';
 import {MoveRecord} from './moveRecord'
-import { Move } from '../domain/move';
 
 export class MoveGateway {
     async findForTurnId (
