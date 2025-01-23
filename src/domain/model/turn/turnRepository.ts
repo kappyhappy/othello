@@ -7,6 +7,7 @@ import { Board } from './board';
 import { TurnGateway } from '../../../infrastructure/turnGateway';
 import { SquareGateway } from '../../../infrastructure/squareGateway';
 import { MoveGateway } from '../../../infrastructure/moveGateway';
+import { DomainError } from '../../error/domainError';
 
 
 const turnGateway = new TurnGateway()
@@ -23,7 +24,7 @@ export class TurnRepository {
             conn, gameId, turnCount
         )
         if (!turnRecord){
-            throw new Error('Specified turn not found')
+            throw new DomainError('SpecifiedTurnNotFound', 'Specified turn not found')
         }
 
         const board = Array.from(Array(8)).map(() => Array.from(Array(8)))

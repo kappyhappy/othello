@@ -1,3 +1,4 @@
+import { DomainError } from "../../error/domainError";
 import { Disc, isOppositeDisc } from "./disc";
 import { Move } from "./move";
 import { Point } from "./point";
@@ -14,13 +15,13 @@ export class Board {
     place(move: Move): Board {
         // check if we can place a disc
         if (this._discs[move.point.y][move.point.x] !== Disc.Empty) {
-            throw new Error('Selected point is not empty')
+            throw new DomainError('SelectedPointIsNotEmpty', 'Selected point is not empty')
         }
 
         const flipPoints = this.listFlipPoints(move)
 
         if (flipPoints.length == 0){
-            throw new Error('Flip point is empty')
+            throw new DomainError('FlipPointIsEmpty', 'Flip point is empty')
         }
 
         // copy a board

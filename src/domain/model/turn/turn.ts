@@ -1,3 +1,4 @@
+import { DomainError } from "../../error/domainError";
 import { Board, initialBoard } from "./board";
 import { Disc } from "./disc";
 import { Move } from "./move";
@@ -16,7 +17,7 @@ export class Turn {
     placeNext (disc: Disc, point: Point): Turn {
         // check if disc placed with correct order
         if (disc !== this._nextDisc) {
-            throw new Error('invalid disc')
+            throw new DomainError('SelectedDiscIsNotNextDisc', 'Selected disc is not next disc')
         } 
 
         const move = new Move(disc, point)
