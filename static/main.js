@@ -14,12 +14,15 @@ const LIGHT = 2
 // ]
 
 const boardElement = document.getElementById('board')
+const nextDiscMessageElement = document.getElementById('next-disc-message')
 
 async function showBoard(turnCount){
     const response = await fetch(`/api/games/latest/turns/${turnCount}`)
     const responseBody = await response.json()
     const board = responseBody.board
     const nextDisc = responseBody.nextDisc
+
+    showNextDiscMessage(nextDisc)
 
     while (boardElement.firstChild) {
         boardElement.removeChild(boardElement.firstChild)
@@ -38,10 +41,11 @@ async function showBoard(turnCount){
                 squareElement.appendChild(stoneElement)
             } else {
                 squareElement.addEventListener('click', async () => {
-                    // console.log('clicked')
                     const nextTurnCount = turnCount + 1
-                    await registerTurn(nextTurnCount, nextDisc, x, y)
-                    await showBoard(nextTurnCount)
+                    const registerTurnResponse = await registerTurn(nextTurnCount, nextDisc, x, y)
+                    if (registerTurnResponse.ok) {
+                        await showBoard(nextTurnCount)
+                    }
                 })
             }
 
@@ -66,13 +70,22 @@ async function registerTurn(turnCount, disc, x, y){
         }
     }
 
-    await fetch('/api/games/latest/turns', {
+    return await fetch('/api/games/latest/turns', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(requestBody)
     })
+}
+
+function showNextDiscMessage(nextDisc){
+    if (nextDisc) {
+        const color = nextDisc === DARK ? 'Black' : 'White'
+        nextDiscMessageElement.innerText = `Next Turn is ${color}`
+    } else {
+        nextDiscMessageElement.innerText = ''
+    }
 }
 
 async function main(){

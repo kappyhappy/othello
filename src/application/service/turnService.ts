@@ -1,6 +1,6 @@
 import { connectMySQL } from "../../infrastructure/connection"
 import { GameRepository } from "../../domain/model/game/gameRepository"
-import { toDisc } from "../../domain/model/turn/disc"
+import { Disc, toDisc } from "../../domain/model/turn/disc"
 import { Point } from "../../domain/model/turn/point"
 import { TurnRepository } from "../../domain/model/turn/turnRepository"
 import { ApplicationError } from "../error/applicationError"
@@ -71,9 +71,8 @@ export class TurnService {
 
     async registerTurn (
         turnCount: number,
-        disc: number,
-        x: number,
-        y: number
+        disc: Disc,
+        point: Point
     ) {
         // get one turn before
         const conn = await connectMySQL()
@@ -96,7 +95,7 @@ export class TurnService {
                 previousTurnCount
             )
 
-            const newTurn = previousTurn.placeNext(toDisc(disc), new Point(x, y))
+            const newTurn = previousTurn.placeNext(disc, point)
 
             // store the turn
             await turnRepository.save(conn, newTurn)
