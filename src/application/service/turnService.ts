@@ -1,12 +1,15 @@
 import { connectMySQL } from "../../infrastructure/connection"
-import { GameRepository } from "../../domain/model/game/gameRepository"
-import { Disc, toDisc } from "../../domain/model/turn/disc"
+import { Disc } from "../../domain/model/turn/disc"
 import { Point } from "../../domain/model/turn/point"
-import { TurnRepository } from "../../domain/model/turn/turnRepository"
 import { ApplicationError } from "../error/applicationError"
+import { TurnRepository } from "../../domain/model/turn/turnRepository"
+import { GameRepository } from "../../domain/model/game/gameRepository"
+import { GameResult } from "../../domain/model/gameResult/gameResult"
+import { GameResultRepository } from "../../domain/model/gameResult/gameResultRepository"
 
 const gameRepository = new GameRepository()
 const turnRepository = new TurnRepository()
+const gameResultRepository = new GameResultRepository() 
 
 class findLatestGameTurnByTurnCountOutput {
     constructor (
@@ -57,12 +60,17 @@ export class TurnService {
                 turnCount
             )
 
+            let gameResult: GameResult | undefined
+            if (turn.gameEnded()) {
+                gameResult = await gameResultRepository.findForGameId(conn, game.id)
+            }
+
             return new findLatestGameTurnByTurnCountOutput(
                 turnCount,
                 turn.board.discs,
                 turn.nextDisc,
                 //Todo get from games_result table if game is over
-                undefined
+                gameResult?.winnerDisc
             )
         } finally {
             await conn.end()
@@ -99,6 +107,13 @@ export class TurnService {
 
             // store the turn
             await turnRepository.save(conn, newTurn)
+
+            if (newTurn.gameEnded()) {
+                const winnerDisc = newTurn.winnerDisc()
+                const gameRsult = new GameResult(game.id, winnerDisc, newTurn.endAt)
+                await gameResultRepository.save(conn, gameRsult)
+
+            }
 
             await conn.commit()
         } finally {
