@@ -2,14 +2,14 @@ import { connectMySQL } from "../../infrastructure/connection"
 import { Disc } from "../../domain/model/turn/disc"
 import { Point } from "../../domain/model/turn/point"
 import { ApplicationError } from "../error/applicationError"
-import { TurnRepository } from "../../domain/model/turn/turnRepository"
-import { GameRepository } from "../../domain/model/game/gameRepository"
 import { GameResult } from "../../domain/model/gameResult/gameResult"
-import { GameResultRepository } from "../../domain/model/gameResult/gameResultRepository"
+import { GameMySQLRepository } from "../../infrastructure/repository/game/gameMySQLRepository"
+import { TurnMySQLRepository } from "../../infrastructure/repository/turn/turnMySQLRepository"
+import { GameResultMySQLRepository } from "../../infrastructure/repository/gameResult/gameResultMySQLRepository"
 
-const gameRepository = new GameRepository()
-const turnRepository = new TurnRepository()
-const gameResultRepository = new GameResultRepository() 
+const gameRepository = new GameMySQLRepository()
+const turnRepository = new TurnMySQLRepository()
+const gameResultRepository = new GameResultMySQLRepository() 
 
 class findLatestGameTurnByTurnCountOutput {
     constructor (
